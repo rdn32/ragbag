@@ -51,3 +51,32 @@ def lengthUnder(power, prefix):
         lengths_under[power] = length, count
         
     return (length + prefix*count, count)
+
+def traverse(prefix, power, listener):
+    items = []
+    for d in range(base):
+        items.append((columnEntry(d, 0), 0))
+    for p in range(1, power):
+        for d in range(1, base):
+            items.append((columnEntry(d, p), p))
+    items.sort()
+    for entry, p in items:
+        if listener.shouldStop(prefix, entry, p):
+            return True
+        elif p == 0:
+            listener.visit(prefix, entry)
+        elif listener.shouldTraverse(prefix, entry, p):
+            stopped = traverse(prefix + entry, p, listener)
+            if stopped:
+                return True
+    return False
+
+class ListMaker:
+    def __init__(self):
+        self.seen = []
+    def shouldStop(self, prefix, entry, power):
+        return False
+    def shouldTraverse(self, prefix, entry, power):
+        return True
+    def visit(self, prefix, entry):
+        self.seen.append(prefix + entry)
