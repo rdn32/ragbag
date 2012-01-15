@@ -6,9 +6,9 @@ import number
 class BaseTenTestCase(unittest.TestCase):
     def setUp(self):
         number.init(10,
-                     ["", "ten", "hundred", "thousand"],
-                     ["", "one", "two", "three", "four",
-                      "five", "six", "seven", "eight", "nine"])
+                    ["", "ten", "hundred", "thousand"],
+                    ["", "one", "two", "three", "four",
+                     "five", "six", "seven", "eight", "nine"])
 
     def testRepr(self):
         self.assertEquals("", number.repr(0))
@@ -26,6 +26,7 @@ class BaseTenTestCase(unittest.TestCase):
         self.assertEquals((combined, num), number.lengthUnder(power, prefix))
 
     def testLengths(self):
+        self._testLengthsImpl(35, 0)
         self._testLengthsImpl(0, 1)
         self._testLengthsImpl(0, 3)
         self._testLengthsImpl(400, 2)
@@ -44,6 +45,30 @@ class BaseTenTestCase(unittest.TestCase):
         self._testListImpl(2)
         self._testListImpl(3)
         self._testListImpl(4)
+
+    def _testFindImpl(self, power, i):
+        num = 10 ** power
+        all = [number.repr(n) for n in range(num)]
+        all.sort()
+        expectedChar = ("".join(all))[i]
+        count = 0
+        for item in all:
+            if i - count >= len(item):
+                count = count + len(item)
+            else:
+                expectedWord = item
+                self.assertEqual(expectedChar, item[i - count])
+                break
+        listener = number.IthCharFinder(i)
+        number.traverse("", power, listener)
+        self.assertEquals(expectedChar, listener.foundChar)
+        self.assertEquals(expectedWord, listener.foundWord)
+
+    def testFind(self):
+        self._testFindImpl(1, 9)
+        self._testFindImpl(2, 345)
+        self._testFindImpl(4, 345)
+
 
 if __name__ == '__main__':
     unittest.main()

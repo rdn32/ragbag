@@ -61,22 +61,29 @@ def traverse(prefix, power, listener):
             items.append((columnEntry(d, p), p))
     items.sort()
     for entry, p in items:
-        if listener.shouldStop(prefix, entry, p):
-            return True
-        elif p == 0:
-            listener.visit(prefix, entry)
-        elif listener.shouldTraverse(prefix, entry, p):
-            stopped = traverse(prefix + entry, p, listener)
-            if stopped:
-                return True
-    return False
+        listener.visit(prefix + entry, p)
 
 class ListMaker:
     def __init__(self):
         self.seen = []
-    def shouldStop(self, prefix, entry, power):
-        return False
-    def shouldTraverse(self, prefix, entry, power):
-        return True
-    def visit(self, prefix, entry):
-        self.seen.append(prefix + entry)
+    def visit(self, prefix, power):
+        if power == 0:
+            self.seen.append(prefix)
+        else:
+            traverse(prefix, power, self)
+
+class IthCharFinder:
+    def __init__(self, i):
+        self.i = i
+        self.foundChar = None
+        self.foundWord = None
+    def visit(self, prefix, power):
+        if self.foundChar is None:
+            length, _ = lengthUnder(power, len(prefix))
+            if self.i >= length:
+                self.i = self.i - length
+            elif power > 0:
+                traverse(prefix, power, self)
+            else:
+                self.foundWord = prefix
+                self.foundChar = prefix[self.i]
