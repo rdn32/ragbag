@@ -36,7 +36,7 @@ class BaseTenTestCase(unittest.TestCase):
         num = 10 ** power
         expected = [number.repr(n) for n in range(num)]
         expected.sort()
-        listener = number.ListMaker()
+        listener = number.ListMaker(num)
         number.traverse("", power, listener)
         self.assertEquals(expected, listener.seen)
 
@@ -69,6 +69,53 @@ class BaseTenTestCase(unittest.TestCase):
         self._testFindImpl(2, 345)
         self._testFindImpl(4, 345)
 
+    def testConvenienceFuncs(self):
+        expected = [number.repr(n) for n in range(10 ** 4)]
+        expected.sort()
+        self.assertEquals(expected[:100], number.makeList(100))
+        char, word, index = number.findIth(999)
+        self.assertEquals("".join(expected)[999], char)
+
+
+class BaseThousandTestCase(unittest.TestCase):
+    def setUp(self):
+        number.initBase1000()
+
+    def testRepr(self):
+        self.assertEquals("", number.repr(0))
+        self.assertEquals("eight", number.repr(8))
+        self.assertEquals("thirtynine", number.repr(39))
+        self.assertEquals("fourhundredeleven", number.repr(411))
+        self.assertEquals("fivethousandtwohundredseven", number.repr(5207))
+        self.assertEquals("twohundredfifteenmillionone", number.repr(215000001))
+        self.assertEquals("thirteenbilliontwentysix", number.repr(13000000026))
+
+    def _testListImpl(self, power):
+        num = 1000 ** power
+        limit = min(num, 1000)
+        listener = number.ListMaker(limit)
+        number.traverse("", power, listener)
+        if limit == num:
+            expected = [number.repr(n) for n in range(num)]
+            expected.sort()
+            self.assertEquals(expected, listener.seen)
+        else:
+            # Just check the number we have are in sequence
+            self.assertEquals(limit, len(listener.seen))
+            for i in range(1, limit):
+                self.assertTrue(listener.seen[i-1] < listener.seen[i])
+
+    def testLists(self):
+        self._testListImpl(1)
+        self._testListImpl(2)
+        self._testListImpl(3)
+        self._testListImpl(4)
+
+    def testConvenienceFuncs(self):
+        char, word, index = number.findIth(999999)
+        numbers = number.makeList(index + 1)
+        combined = "".join(numbers)
+        self.assertEquals(combined[999999], char)
 
 if __name__ == '__main__':
     unittest.main()
