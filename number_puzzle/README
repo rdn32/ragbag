@@ -1,0 +1,15 @@
+Number puzzle
+-------------
+
+"I can't make this [http://www.camdug.com/events/43816292/], but I did hear a
+fun puzzle. It involves converting numbers to words - but for simplicity
+missing out spaces, commas, hyphens and "and", so e.g. 172904 becomes
+"onehundredseventytwothousandninehundredfour". One can imagine doing this for
+numbers up to (but not including) 1 trillion, sorting them alphabetically, and
+concatenating them. If you wanted to know what, say, the millionth character of
+the resulting string was, how would you find it?"
+
+The answer I got (for the millionth letter of the sequence) was 'e' - this
+being the sixty-seventh letter of
+"eightbillioneighteenmillioneighthundredeleventhousandsevenhundredseventyeight"
+(in case you were wondering).
