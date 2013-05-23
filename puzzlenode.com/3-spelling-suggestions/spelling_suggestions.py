@@ -38,4 +38,12 @@ def pickSuggestion(word, alt1, alt2):
 # set of words and two suggestions to the
 # given callback.
 def parseInput(input, callback):
-    pass
+    line = input.readline()
+    n = int(line.strip())
+    for _ in range(n):
+        blank = input.readline()
+        word = input.readline().strip()
+        alt1 = input.readline().strip()
+        alt2 = input.readline().strip()
+        callback(word, alt1, alt2)
+

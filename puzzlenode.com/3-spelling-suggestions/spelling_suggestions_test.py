@@ -46,5 +46,25 @@ class InputParser(unittest.TestCase):
         spelling_suggestions.parseInput(input, callback)
         self.assertEquals([], results)
 
+    def testSampleInput(self):
+        text = """\
+2
+
+remimance
+remembrance
+reminiscence
+
+inndietlly
+immediately
+incidentally
+"""
+        input = StringIO(text)
+        results = []
+        callback = lambda word, alt1, alt2: results.append((word, alt1, alt2))
+        spelling_suggestions.parseInput(input, callback)
+        expected = [("remimance", "remembrance", "reminiscence"),
+                    ( "inndietlly", "immediately", "incidentally")]
+        self.assertEquals(expected, results)
+
 if __name__ == "__main__":
     unittest.main()
