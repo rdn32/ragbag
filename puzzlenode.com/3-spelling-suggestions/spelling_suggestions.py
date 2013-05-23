@@ -21,3 +21,14 @@ def commonSubsequenceLength(s1, s2):
                              lcs[l1, l2-1])
             lcs[l1,l2] = result
     return lcs[len(s1), len(s2)]
+
+# Given a (possibly) misspelt word, and two
+# suggestions as to what it might be, picks
+# the more likely.
+def pickSuggestion(word, alt1, alt2):
+    lcsLength1 = commonSubsequenceLength(word, alt1)
+    lcsLength2 = commonSubsequenceLength(word, alt2)
+    if lcsLength1 >= lcsLength2:
+        return alt1
+    else:
+        return alt2

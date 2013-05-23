@@ -20,5 +20,22 @@ class CommonSubsequenceLengthTest(unittest.TestCase):
         actualLength = spelling_suggestions.commonSubsequenceLength(s1, s2)
         self.assertEquals(expectedLength, actualLength)
 
+class SuggestionPickerTest(unittest.TestCase):
+    def testSampleExample1(self):
+        word = "remimance"
+        alt1 = "remembrance"
+        alt2 = "reminiscence"
+        self.runTestCase(alt1, word, alt1, alt2)
+
+    def testSampleExample2(self):
+        word = "inndietlly"
+        alt1 = "immediately"
+        alt2 = "incidentally"
+        self.runTestCase(alt2, word, alt1, alt2)
+
+    def runTestCase(self, expectedAlt, word, alt1, alt2):
+        actualAlt = spelling_suggestions.pickSuggestion(word, alt1, alt2)
+        self.assertEquals(expectedAlt, actualAlt)
+
 if __name__ == "__main__":
     unittest.main()
