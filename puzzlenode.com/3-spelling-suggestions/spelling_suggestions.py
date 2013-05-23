@@ -47,3 +47,8 @@ def parseInput(input, callback):
         alt2 = input.readline().strip()
         callback(word, alt1, alt2)
 
+if __name__ == "__main__":
+    import sys
+    def processCase(word, alt1, alt2):
+        print pickSuggestion(word, alt1, alt2)
+    parseInput(sys.stdin, processCase)
