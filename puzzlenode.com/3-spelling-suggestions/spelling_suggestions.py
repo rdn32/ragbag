@@ -32,3 +32,10 @@ def pickSuggestion(word, alt1, alt2):
         return alt1
     else:
         return alt2
+
+# Parses the input, which has the format
+# described in README.md, passing each
+# set of words and two suggestions to the
+# given callback.
+def parseInput(input, callback):
+    pass

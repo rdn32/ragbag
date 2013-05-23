@@ -2,6 +2,7 @@
 
 import unittest
 import spelling_suggestions
+from StringIO import StringIO
 
 class CommonSubsequenceLengthTest(unittest.TestCase):
     def testEmptyStrings(self):
@@ -36,6 +37,14 @@ class SuggestionPickerTest(unittest.TestCase):
     def runTestCase(self, expectedAlt, word, alt1, alt2):
         actualAlt = spelling_suggestions.pickSuggestion(word, alt1, alt2)
         self.assertEquals(expectedAlt, actualAlt)
+
+class InputParser(unittest.TestCase):
+    def testEmptyInput(self):
+        input = StringIO("0\n")
+        results = []
+        callback = lambda word, alt1, alt2: results.append((word, alt1, alt2))
+        spelling_suggestions.parseInput(input, callback)
+        self.assertEquals([], results)
 
 if __name__ == "__main__":
     unittest.main()
