@@ -13,6 +13,9 @@ class CommonSubsequenceLengthTest(unittest.TestCase):
     def testDisjointStrings(self):
         self.runTestCase(0, "abc", "def")
 
+    def testSimilarStrings(self):
+        self.runTestCase(3, "abXXXbXXcXXX", "YaYYYYYYbc")
+
     def runTestCase(self, expectedLength, s1, s2):
         actualLength = spelling_suggestions.commonSubsequenceLength(s1, s2)
         self.assertEquals(expectedLength, actualLength)
