@@ -2,4 +2,4 @@
 
 # Solution to "Spelling Suggestions" puzzle
 def commonSubsequenceLength(s1, s2):
-    return 0
+    return len(s1)
