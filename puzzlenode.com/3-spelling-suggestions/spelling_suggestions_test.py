@@ -40,14 +40,12 @@ class SuggestionPickerTest(unittest.TestCase):
 
 class InputParser(unittest.TestCase):
     def testEmptyInput(self):
-        input = StringIO("0\n")
-        results = []
-        callback = lambda word, alt1, alt2: results.append((word, alt1, alt2))
-        spelling_suggestions.parseInput(input, callback)
-        self.assertEquals([], results)
+        self.runTestCase([], "0\n")
 
     def testSampleInput(self):
-        text = """\
+        self.runTestCase([("remimance", "remembrance", "reminiscence"),
+                          ("inndietlly", "immediately", "incidentally")],
+                         """\
 2
 
 remimance
@@ -57,13 +55,13 @@ reminiscence
 inndietlly
 immediately
 incidentally
-"""
+""")
+
+    def runTestCase(self, expected, text):
         input = StringIO(text)
         results = []
         callback = lambda word, alt1, alt2: results.append((word, alt1, alt2))
         spelling_suggestions.parseInput(input, callback)
-        expected = [("remimance", "remembrance", "reminiscence"),
-                    ( "inndietlly", "immediately", "incidentally")]
         self.assertEquals(expected, results)
 
 if __name__ == "__main__":
