@@ -8,7 +8,7 @@ HACK_SUFFIX = ".hack"
 
 class error(Exception): pass
 
-class Matcher:
+class Matcher(object):
     def __init__(self, s):
         self.s = s
         self.m = None
@@ -77,6 +77,42 @@ jmpCode = {
         "JMP" : "111"
 }
 
+class AInstr(object):
+    def __init__(self, value, symbol):
+        self.value = value
+        self.symbol = symbol
+        self.type = "A"
+
+class CInstr(object):
+    def __init__(self, dest, comp, jmp):
+        self.dest = dest
+        self.comp = comp
+        self.jmp = jmp
+        self.type = "C"
+
+class LInstr(object):
+    def __init__(self, symbol):
+        self.symbol = symbol
+        self.type = "L"
+
+def doPass(src):
+    for line in src:
+        line = re.sub(r"//.*", "", line).strip()
+        m = Matcher(line)
+
+        if m.match(r"^$"):
+            pass
+        elif m.match(r"^@(\d+)$"):
+            value = int(m.group(1))
+            yield AInstr(int(m.group(1)), None)
+        elif m.match(r"^@([^()]+)"):
+            yield AInstr(None, m.group(1))
+        elif m.match(r"^([^=;]+)=([^=;]+)$"):
+            yield CInstr(m.group(1), m.group(2), None)
+        elif m.match(r"^([^=;]+);([^=;]+)$"):
+            yield CInstr(None, m.group(1), m.group(2))
+        elif m.match(r"^\(([^()]+)\)"):
+            yield LInstr(m.group(1))
 
 def assemble(src_filename):
     if not src_filename.endswith(ASM_SUFFIX):
@@ -84,29 +120,28 @@ def assemble(src_filename):
     tgt_filename = src_filename[:-len(ASM_SUFFIX)] + HACK_SUFFIX
 
     with nested(open(src_filename, "r"), open(tgt_filename, "w")) as (src, tgt):
-        for line in src:
-            line = re.sub(r"//.*", "", line).strip()
-            m = Matcher(line)
+        symbols = {}
+        pc = 0
+        for instr in doPass(src):
+            if instr.type == "L":
+                symbols[instr.symbol] = pc
+            else:
+                pc = pc + 1
 
-            instr = None
-            if m.match(r"^$"):
-                pass
-            elif m.match(r"^@(\d+)$"):
-                val = int(m.group(1))
-                instr = "0" + binary(val, 15)
-            elif m.match(r"^([^=;]+)=([^=;]+)$"):
-                dest = m.group(1)
-                comp = m.group(2)
-                jmp = None
-                instr = "111" + compCode[comp] + destCode[dest] + jmpCode[jmp]
-            elif m.match(r"^([^=;]+);([^=;]+)$"):
-                dest = None
-                comp = m.group(1)
-                jmp = m.group(2)
-                instr = "111" + compCode[comp] + destCode[dest] + jmpCode[jmp]
+        src.seek(0)
+        for instr in doPass(src):
+            out = None
+            if instr.type == "A":
+                if instr.symbol:
+                    value = symbols[instr.symbol]
+                else:
+                    value = instr.value
+                out = "0" + binary(value, 15)
+            elif instr.type == "C":
+                out = "111" + compCode[instr.comp] + destCode[instr.dest] + jmpCode[instr.jmp]
 
-            if instr:
-                tgt.write(instr)
+            if out:
+                tgt.write(out)
                 tgt.write("\n")
 
 if __name__ == "__main__":
