@@ -95,6 +95,30 @@ class LInstr(object):
         self.symbol = symbol
         self.type = "L"
 
+class SymbolTable(object):
+    def __init__(self):
+        self.symbols = {}
+        self.next_var = 0x0010
+
+        self.symbols["SP"] = 0
+        self.symbols["LCL"] = 1
+        self.symbols["ARG"] = 2
+        self.symbols["THIS"] = 3
+        self.symbols["THAT"] = 4
+        for r in range(16):
+            self.symbols["R%d" % r] = r
+        self.symbols["SCREEN"] = 0x4000
+        self.symbols["KBD"] = 0x6000
+
+    def set(self, symbol, value):
+        self.symbols[symbol] = value
+
+    def getOrGenerate(self, symbol):
+        if symbol not in self.symbols:
+            self.symbols[symbol] = self.next_var
+            self.next_var += 1
+        return self.symbols[symbol]
+
 def doPass(src):
     for line in src:
         line = re.sub(r"//.*", "", line).strip()
@@ -119,27 +143,19 @@ def assemble(src_filename):
         raise error, "Illegal file name '%s'" % src_filename
     tgt_filename = src_filename[:-len(ASM_SUFFIX)] + HACK_SUFFIX
 
-    symbols = {}
-    symbols["SP"] = 0
-    symbols["LCL"] = 1
-    symbols["ARG"] = 2
-    symbols["THIS"] = 3
-    symbols["THAT"] = 4
-    for r in range(16):
-        symbols["R%d" % r] = r
-    symbols["SCREEN"] = 0x4000
-    symbols["KBD"] = 0x6000
+    symbols = SymbolTable()
 
     with nested(open(src_filename, "r"), open(tgt_filename, "w")) as (src, tgt):
+        # First pass: get addresses for all labels
         pc = 0
         for instr in doPass(src):
             if instr.type == "L":
-                symbols[instr.symbol] = pc
+                symbols.set(instr.symbol, pc)
             else:
                 pc = pc + 1
 
+        # Second pass: generate code
         src.seek(0)
-        next_var = 0x0010
 
         for instr in doPass(src):
             out = None
@@ -147,10 +163,7 @@ def assemble(src_filename):
                 if instr.symbol is None:
                     value = instr.value
                 else:
-                    if not instr.symbol in symbols:
-                        symbols[instr.symbol] = next_var
-                        next_var += 1
-                    value = symbols[instr.symbol]
+                    value = symbols.getOrGenerate(instr.symbol)
                 out = "0" + binary(value, 15)
             elif instr.type == "C":
                 out = "111" + compCode[instr.comp] + destCode[instr.dest] + jmpCode[instr.jmp]
