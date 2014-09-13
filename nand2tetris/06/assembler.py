@@ -119,8 +119,18 @@ def assemble(src_filename):
         raise error, "Illegal file name '%s'" % src_filename
     tgt_filename = src_filename[:-len(ASM_SUFFIX)] + HACK_SUFFIX
 
+    symbols = {}
+    symbols["SP"] = 0
+    symbols["LCL"] = 1
+    symbols["ARG"] = 2
+    symbols["THIS"] = 3
+    symbols["THAT"] = 4
+    for r in range(16):
+        symbols["R%d" % r] = r
+    symbols["SCREEN"] = 0x4000
+    symbols["KBD"] = 0x6000
+
     with nested(open(src_filename, "r"), open(tgt_filename, "w")) as (src, tgt):
-        symbols = {}
         pc = 0
         for instr in doPass(src):
             if instr.type == "L":
@@ -129,13 +139,18 @@ def assemble(src_filename):
                 pc = pc + 1
 
         src.seek(0)
+        next_var = 0x0010
+
         for instr in doPass(src):
             out = None
             if instr.type == "A":
-                if instr.symbol:
-                    value = symbols[instr.symbol]
-                else:
+                if instr.symbol is None:
                     value = instr.value
+                else:
+                    if not instr.symbol in symbols:
+                        symbols[instr.symbol] = next_var
+                        next_var += 1
+                    value = symbols[instr.symbol]
                 out = "0" + binary(value, 15)
             elif instr.type == "C":
                 out = "111" + compCode[instr.comp] + destCode[instr.dest] + jmpCode[instr.jmp]
