@@ -43,8 +43,16 @@ compCode = {
         "D-A" : "0000111",
         "D&A" : "0000000",
         "D|A" : "0010101",
-        "M"   : "1110000"
-        # TBC
+        "M"   : "1110000",
+        "!M"  : "1110001",
+        "-M"  : "1110011",
+        "M+1" : "1110111",
+        "M-1" : "1110010",
+        "D+M" : "1000010",
+        "D-M" : "1010011",
+        "M-D" : "1000111",
+        "D&M" : "1000000",
+        "D|M" : "1010101"
 }
 
 destCode = {
@@ -56,6 +64,17 @@ destCode = {
         "AM"  : "101",
         "AD"  : "110",
         "AMD" : "111"
+}
+
+jmpCode = {
+        None  : "000",
+        "JGT" : "001",
+        "JEQ" : "010",
+        "JGE" : "011",
+        "JLT" : "100",
+        "JNE" : "101",
+        "JLE" : "110",
+        "JMP" : "111"
 }
 
 
@@ -75,10 +94,16 @@ def assemble(src_filename):
             elif m.match(r"^@(\d+)$"):
                 val = int(m.group(1))
                 instr = "0" + binary(val, 15)
-            elif m.match(r"([^=]+)=([^=]+)"):
+            elif m.match(r"^([^=;]+)=([^=;]+)$"):
                 dest = m.group(1)
                 comp = m.group(2)
-                instr = "111" + compCode[comp] + destCode[dest] + "000"
+                jmp = None
+                instr = "111" + compCode[comp] + destCode[dest] + jmpCode[jmp]
+            elif m.match(r"^([^=;]+);([^=;]+)$"):
+                dest = None
+                comp = m.group(1)
+                jmp = m.group(2)
+                instr = "111" + compCode[comp] + destCode[dest] + jmpCode[jmp]
 
             if instr:
                 tgt.write(instr)
