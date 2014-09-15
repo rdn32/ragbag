@@ -8,24 +8,78 @@ HACK_SUFFIX = ".hack"
 
 class error(Exception): pass
 
-class Matcher(object):
-    def __init__(self, s):
-        self.s = s
-        self.m = None
+class AInstr(object):
+    def __init__(self, value, symbol):
+        self.value = value
+        self.symbol = symbol
+        self.type = "A"
 
-    def match(self, pattern):
-        self.m = re.match(pattern, self.s)
-        return self.m
+class CInstr(object):
+    def __init__(self, dest, comp, jmp):
+        self.dest = dest
+        self.comp = comp
+        self.jmp = jmp
+        self.type = "C"
 
-    def group(self, n):
-        return self.m.group(n)
+class LInstr(object):
+    def __init__(self, symbol):
+        self.symbol = symbol
+        self.type = "L"
 
-def binary(n, num_digits):
-    result = ""
-    for _ in range(num_digits):
-        result = str(n & 1) + result
-        n = n >> 1
-    return result
+def assemble(src_filename):
+    if not src_filename.endswith(ASM_SUFFIX):
+        raise error, "Illegal file name '%s'" % src_filename
+    tgt_filename = src_filename[:-len(ASM_SUFFIX)] + HACK_SUFFIX
+
+    symbols = SymbolTable()
+
+    with nested(open(src_filename, "r"), open(tgt_filename, "w")) as (src, tgt):
+        # First pass: get addresses for all labels
+        pc = 0
+        instrs = getInstructions(src)
+        for instr in instrs:
+            if instr.type == "L":
+                symbols.set(instr.symbol, pc)
+            else:
+                pc = pc + 1
+
+        # Second pass: generate code
+        for instr in instrs:
+            out = None
+            if instr.type == "A":
+                if instr.symbol is None:
+                    value = instr.value
+                else:
+                    value = symbols.getOrGenerate(instr.symbol)
+                out = "0" + binary(value, 15)
+            elif instr.type == "C":
+                out = "111" + compCode[instr.comp] + destCode[instr.dest] + jmpCode[instr.jmp]
+
+            if out:
+                tgt.write(out)
+                tgt.write("\n")
+
+def getInstructions(src):
+    instrs = []
+    for line in src:
+        line = re.sub(r"//.*", "", line).strip()
+        m = Matcher(line)
+
+        if m.match(r"^$"):
+            pass
+        elif m.match(r"^@(\d+)$"):
+            value = int(m.group(1))
+            instrs.append(AInstr(int(m.group(1)), None))
+        elif m.match(r"^@([^()]+)"):
+            instrs.append(AInstr(None, m.group(1)))
+        elif m.match(r"^([^=;]+)=([^=;]+)$"):
+            instrs.append(CInstr(m.group(1), m.group(2), None))
+        elif m.match(r"^([^=;]+);([^=;]+)$"):
+            instrs.append(CInstr(None, m.group(1), m.group(2)))
+        elif m.match(r"^\(([^()]+)\)"):
+            instrs.append(LInstr(m.group(1)))
+
+    return instrs
 
 compCode = {
         "0"   : "0101010",
@@ -77,24 +131,6 @@ jmpCode = {
         "JMP" : "111"
 }
 
-class AInstr(object):
-    def __init__(self, value, symbol):
-        self.value = value
-        self.symbol = symbol
-        self.type = "A"
-
-class CInstr(object):
-    def __init__(self, dest, comp, jmp):
-        self.dest = dest
-        self.comp = comp
-        self.jmp = jmp
-        self.type = "C"
-
-class LInstr(object):
-    def __init__(self, symbol):
-        self.symbol = symbol
-        self.type = "L"
-
 class SymbolTable(object):
     def __init__(self):
         self.symbols = {}
@@ -119,58 +155,24 @@ class SymbolTable(object):
             self.next_var += 1
         return self.symbols[symbol]
 
-def doPass(src):
-    for line in src:
-        line = re.sub(r"//.*", "", line).strip()
-        m = Matcher(line)
+class Matcher(object):
+    def __init__(self, s):
+        self.s = s
+        self.m = None
 
-        if m.match(r"^$"):
-            pass
-        elif m.match(r"^@(\d+)$"):
-            value = int(m.group(1))
-            yield AInstr(int(m.group(1)), None)
-        elif m.match(r"^@([^()]+)"):
-            yield AInstr(None, m.group(1))
-        elif m.match(r"^([^=;]+)=([^=;]+)$"):
-            yield CInstr(m.group(1), m.group(2), None)
-        elif m.match(r"^([^=;]+);([^=;]+)$"):
-            yield CInstr(None, m.group(1), m.group(2))
-        elif m.match(r"^\(([^()]+)\)"):
-            yield LInstr(m.group(1))
+    def match(self, pattern):
+        self.m = re.match(pattern, self.s)
+        return self.m
 
-def assemble(src_filename):
-    if not src_filename.endswith(ASM_SUFFIX):
-        raise error, "Illegal file name '%s'" % src_filename
-    tgt_filename = src_filename[:-len(ASM_SUFFIX)] + HACK_SUFFIX
+    def group(self, n):
+        return self.m.group(n)
 
-    symbols = SymbolTable()
-
-    with nested(open(src_filename, "r"), open(tgt_filename, "w")) as (src, tgt):
-        # First pass: get addresses for all labels
-        pc = 0
-        for instr in doPass(src):
-            if instr.type == "L":
-                symbols.set(instr.symbol, pc)
-            else:
-                pc = pc + 1
-
-        # Second pass: generate code
-        src.seek(0)
-
-        for instr in doPass(src):
-            out = None
-            if instr.type == "A":
-                if instr.symbol is None:
-                    value = instr.value
-                else:
-                    value = symbols.getOrGenerate(instr.symbol)
-                out = "0" + binary(value, 15)
-            elif instr.type == "C":
-                out = "111" + compCode[instr.comp] + destCode[instr.dest] + jmpCode[instr.jmp]
-
-            if out:
-                tgt.write(out)
-                tgt.write("\n")
+def binary(n, num_digits):
+    result = ""
+    for _ in range(num_digits):
+        result = str(n & 1) + result
+        n = n >> 1
+    return result
 
 if __name__ == "__main__":
     import sys
