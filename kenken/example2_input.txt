@@ -1,0 +1,23 @@
+AABBCC
+DEFFFG
+DHHIIG
+DJJKKL
+MNNNKL
+MMOOPP
+
+A 3 /
+B 1 -
+C 4 -
+D 60 *
+E 6
+F 9 +
+G 9 +
+H 2 /
+I 1 -
+J 24 *
+K 8 +
+L 2 /
+M 60 *
+N 60 *
+O 2 /
+P 3 -

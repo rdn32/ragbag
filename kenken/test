@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -ex
+(cat example1_input.txt | python kenken_solver.py > out.txt) \
+&& diff example1_output.txt out.txt
+rm out.txt
+(cat example2_input.txt | python kenken_solver.py > out.txt) \
+&& diff example2_output.txt out.txt
+rm out.txt
