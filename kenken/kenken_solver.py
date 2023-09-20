@@ -147,4 +147,4 @@ def solve(constraint_map, state=None, i=0):
 
 if __name__ == "__main__":
     import sys
-    print "\n".join(soln for soln in solve(parse(sys.stdin))),
+    print("\n".join(soln for soln in solve(parse(sys.stdin))), end='')

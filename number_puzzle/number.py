@@ -59,7 +59,7 @@ def repr(n):
         remaining = remaining // base
         result.append(columnEntry(d, p))
     if remaining != 0:
-        raise ArithmeticError, "Overflow"
+        raise ArithmeticError("Overflow")
     result.reverse()
     return "".join(result)
 
@@ -73,7 +73,7 @@ def lengthUnder(power, lenPrefix):
     if power == 0:
         return (lenPrefix, 1)
 
-    if lengths_under.has_key(power):
+    if power in lengths_under:
         length, count = lengths_under[power]
     else:
         length = 0
@@ -137,14 +137,14 @@ def findIth(i):
     finder = IthCharFinder(i)
     traverse("", max_power, finder)
     if finder.foundChar is None:
-        raise IndexError, "index out of range of number sequence"
+        raise IndexError("index out of range of number sequence")
     return finder.foundChar, finder.foundWord, finder.wordIndex
 
 if __name__ == "__main__":
     which = 1000000
     char, _, _ = findIth(which - 1)
-    print """\
+    print("""\
 Take numbers up to %d
 Convert to words, sort alphabetically, then concatenate
 The %dth character is '%s'\
-""" % (base ** max_power, which, char)
+""" % (base ** max_power, which, char))
